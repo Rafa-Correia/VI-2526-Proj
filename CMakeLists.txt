@@ -39,6 +39,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(oidn_prebuilt)
 
+
+
 list(APPEND CMAKE_PREFIX_PATH "${oidn_prebuilt_SOURCE_DIR}")
 
 find_package(OpenImageDenoise REQUIRED CONFIG)
@@ -129,6 +131,8 @@ target_precompile_headers(VI-RT PRIVATE src/vi_pch.h)
 
 target_link_libraries(VI-RT PRIVATE glm::glm)
 target_link_libraries(VI-RT PRIVATE OpenImageDenoise)
+
+target_link_options(VI-RT PRIVATE -static -static-libgcc -static-libstdc++)
 
 if (MSVC)
   target_compile_options(VI-RT PRIVATE /W4)
