@@ -1,4 +1,4 @@
-#pragma once
+/* #pragma once
 
 #include <OpenImageDenoise/oidn.hpp>
 
@@ -34,3 +34,4 @@ private:
 };
 
 } // namespace VI
+ */
