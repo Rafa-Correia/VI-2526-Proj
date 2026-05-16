@@ -6,7 +6,9 @@
 #include "Shaders/Shader.hpp"
 #include "Utils/ProgressBar.hpp"
 
+#include <atomic>
 #include <future>
+#include <iostream>
 #include <vector>
 
 namespace VI
@@ -25,14 +27,20 @@ public:
     auto [width, height] = camera.GetResolution();
 
     Image image{static_cast<int>(width), static_cast<int>(height)};
-    ProgressBar progress{static_cast<int>(width * height)};
+    // ProgressBar progress{static_cast<int>(width * height)};
 
     // std::vector<std::future<void>> futures;
 
     // float spp_factor = 1.0f / samples_per_pixel;
 
-    int thread_cnt = 16;
+    // int thread_cnt = std::thread::hardware_concurrency();
+    int thread_cnt = 8;
+
+    std::cout << "Up to " << thread_cnt << " concurrent threads supported." << std::endl;
+
     std::vector<std::thread> threads(thread_cnt);
+
+    std::atomic<int> next_row = 0;
 
     for (int i = 0; i < thread_cnt; i++)
     {
@@ -40,10 +48,9 @@ public:
           [&, i]()
           {
             thread_callable(
-                i,
-                thread_cnt,
+                next_row,
                 image,
-                progress,
+                /* progress, */
                 scene,
                 camera,
                 shader,
@@ -77,24 +84,34 @@ public:
       }
     } */
 
-    progress.Finish();
+    // progress.Finish();
 
     return image;
   }
 
 private:
   template <Shader S>
-  void thread_callable(int thread_idx, int thread_cnt, Image& img, ProgressBar& prog, const Scene& sc, const Camera& cam, const S& sh, int spp, bool do_jittering)
+  void thread_callable(std::atomic<int>& next_row, Image& img /* , ProgressBar& prog */, const Scene& sc, const Camera& cam, const S& sh, int spp, bool do_jittering)
   {
+    // auto begin = std::chrono::system_clock::now();
+
     int height = img.GetHeight();
     int width = img.GetWidth();
 
-    int delta = height / thread_cnt;
+    // std::cout << "thread_callable(...): " << thread_idx << std::endl;
 
     float spp_factor = 1.0f / spp;
 
-    for (int y = delta * thread_idx; y < std::min(delta * (thread_idx + 1), height); ++y)
+    while (1)
     {
+      const int y = next_row.fetch_add(1, std::memory_order_relaxed);
+
+      // No more work left
+      if (y >= height)
+      {
+        break;
+      }
+
       for (int x = 0; x < static_cast<int>(width); ++x)
       {
         RGB color = RGB{0.0f};
@@ -109,9 +126,15 @@ private:
           color += sh.Execute(ray, sc);
         }
         img.Set(x, y, color * spp_factor);
-        prog.Increment();
+        // prog.Increment();
       }
     }
+
+    // auto end = std::chrono::system_clock::now();
+
+    // auto duration = std::chrono::duration<double>(end - begin);
+
+    // std::cout << "Thread " << thread_idx << " took: " << duration.count() << " sec" << '\n';
   }
 };
 } // namespace VI
