@@ -18,7 +18,7 @@ class Renderer final
 {
 public:
   template <Shader S>
-  Image Render(const Scene& scene, const Camera& camera, const S& shader, int samples_per_pixel = 1, bool do_jittering = false)
+  Image Render(const Scene& scene, const ICamera& camera, const S& shader, int samples_per_pixel = 1, bool do_jittering = false)
   {
     auto [width, height] = camera.GetResolution();
 

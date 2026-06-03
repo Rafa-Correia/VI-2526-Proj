@@ -11,8 +11,14 @@
 
 namespace VI
 {
-Camera::Camera(Point eye, Point at, Vector up, int width, int height, float fov_h, float defocus_angle, float focus_dist) : m_Eye{eye}, m_At{at}, m_Up{up}, m_Width{width}, m_Height{height}, m_DefocusAngle{defocus_angle}
+Camera::Camera(Point eye, Point at, Vector up, int width, int height, float fov_h, float defocus_angle, float focus_dist) : m_DefocusAngle{defocus_angle}
 {
+  m_Eye = eye;
+  m_At = at;
+  m_Up = up;
+
+  m_Width = width;
+  m_Height = height;
 
   Vector forward = glm::normalize(m_At - m_Eye);
   Vector right = glm::normalize(glm::cross(forward, up));
@@ -56,6 +62,54 @@ Ray Camera::GenerateRay(int x, int y, glm::vec2 jitter) const
   Vector direction = glm::normalize(pixel_sample - origin);
 
   return {.Origin = origin, .Direction = direction};
+}
+
+Orthographic::Orthographic(Point eye, Point at, Vector up, int width, int height, float sizex, float sizey)
+{
+  m_Eye = eye;
+  m_At = at;
+  m_Up = up;
+  m_Width = width;
+  m_Height = height;
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+
+  Vector right = glm::normalize(glm::cross(m_Dir, m_Up));
+  Vector c_up = glm::normalize(glm::cross(right, m_Dir));
+
+  m_Pixel00Location = m_Eye - (right * (sizex / 2.0f)) + (c_up * (sizey / 2.0f));
+
+  m_PixelDeltaU = right * (sizex / static_cast<float>(m_Width));
+  m_PixelDeltaV = c_up * (-1.0f * sizey / static_cast<float>(m_Height));
+}
+
+Orthographic::Orthographic(const Camera& other, float sizex, float sizey)
+{
+  m_Eye = other.GetEye();
+  m_At = other.GetAt();
+  m_Up = other.GetUp();
+
+  Resolution res = other.GetResolution();
+
+  m_Width = static_cast<int>(res.Width);
+  m_Height = static_cast<int>(res.Height);
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+
+  Vector right = glm::normalize(glm::cross(m_Dir, m_Up));
+  Vector c_up = glm::normalize(glm::cross(right, m_Dir));
+
+  m_Pixel00Location = m_Eye - (right * (sizex / 2.0f)) + (c_up * (sizey / 2.0f));
+
+  m_PixelDeltaU = right * (sizex / static_cast<float>(m_Width));
+  m_PixelDeltaV = c_up * (-1.0f * sizey / static_cast<float>(m_Height));
+}
+
+Ray Orthographic::GenerateRay(int x, int y, glm::vec2 jitter) const
+{
+  Point origin = m_Pixel00Location + (m_PixelDeltaU * static_cast<float>(x)) + (m_PixelDeltaV * static_cast<float>(y));
+
+  return {origin, Vector(m_Dir)};
 }
 
 } // namespace VI

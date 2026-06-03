@@ -7,31 +7,77 @@
 
 namespace VI
 {
-class Camera final
+struct Resolution
+{
+  float Width, Height;
+};
+
+class ICamera
+{
+protected:
+  Point m_Eye, m_At;
+  Vector m_Up;
+
+  int m_Width, m_Height;
+
+public:
+  virtual Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const = 0;
+
+  virtual Resolution GetResolution() const noexcept = 0;
+};
+
+class Camera final : public ICamera
 {
 public:
-  struct Resolution
-  {
-    float Width, Height;
-  };
-
   Camera(Point eye, Point at, Vector up, int width, int height, float fov_h, float defocus_angle = 0.f, float focus_dist = 1.);
 
-  Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const;
+  Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const override;
 
-  inline Resolution GetResolution() const noexcept
+  inline Resolution GetResolution() const noexcept override
   {
     return {static_cast<float>(m_Width), static_cast<float>(m_Height)};
   }
 
-private:
-  Point m_Eye, m_At;
-  Vector m_Up;
-  int m_Width, m_Height;
+  inline Point GetEye() const
+  {
+    return Point(this->m_Eye);
+  }
 
+  inline Point GetAt() const
+  {
+    return Point(this->m_At);
+  }
+
+  inline Vector GetUp() const
+  {
+    return Vector(this->m_Up);
+  }
+
+private:
   Point m_Pixel00Location;
   Vector m_PixelDeltaU, m_PixelDeltaV;
   Vector m_DefocusDiskRight, m_DefocusDiskUp;
   float m_DefocusAngle;
 };
+
+class Orthographic final : public ICamera
+{
+public:
+  Orthographic(Point eye, Point at, Vector up, int width, int height, float sizex = 4, float sizey = 3);
+  Orthographic(const Camera& other, float sizex, float sizey);
+
+  Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const override;
+
+  inline Resolution GetResolution() const noexcept override
+  {
+    return {static_cast<float>(m_Width), static_cast<float>(m_Height)};
+  }
+
+private:
+  Point m_Pixel00Location;
+  Vector m_PixelDeltaU, m_PixelDeltaV;
+
+  Vector m_Dir;
+};
+
 } // namespace VI

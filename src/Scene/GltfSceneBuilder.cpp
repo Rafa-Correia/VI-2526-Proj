@@ -1,3 +1,7 @@
+#include "Camera/Camera.hpp"
+#include "Primitive/BoundingBox.hpp"
+#include "glm/ext/scalar_constants.hpp"
+#include <memory>
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define STB_IMAGE_IMPLEMENTATION
@@ -15,8 +19,8 @@
 #include <glm/matrix.hpp>
 
 #include <algorithm>
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
 #include <string_view>
 #include <utility>
 #include <vector>
