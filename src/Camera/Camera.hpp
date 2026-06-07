@@ -2,6 +2,7 @@
 
 #include "Math/Vector.hpp"
 #include "Ray/Ray.hpp"
+#include "glm/ext/scalar_constants.hpp"
 
 #include <glm/ext/vector_float2.hpp>
 #include <iostream>
@@ -117,6 +118,25 @@ private:
 
   Vector m_DefocusDiskRight, m_DefocusDiskUp;
   float m_DefocusAngle;
+};
+
+class Fisheye final : public ICamera
+{
+public:
+  Fisheye(Point eye, Point at, Vector up, int width, int height, float hfov = glm::pi<float>());
+  Fisheye(const Camera& other, float hfov = glm::pi<float>());
+
+  Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const override;
+
+  inline Resolution GetResolution() const noexcept override
+  {
+    return {static_cast<float>(m_Width), static_cast<float>(m_Height)};
+  }
+
+private:
+  Vector m_Dir, m_Right, m_CUp;
+
+  float m_HFoV;
 };
 
 } // namespace VI

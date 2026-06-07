@@ -204,4 +204,85 @@ Ray DOF::GenerateRay(int x, int y, glm::vec2 jitter) const
   return {.Origin = origin, .Direction = direction};
 }
 
+// FISHEYE
+
+Fisheye::Fisheye(Point eye, Point at, Vector up, int width, int height, float hfov)
+{
+  m_Eye = eye;
+  m_At = at;
+  m_Up = up;
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+  m_Right = glm::normalize(glm::cross(m_Dir, m_Up));
+  m_CUp = glm::normalize(glm::cross(m_Right, m_Dir));
+
+  m_Width = width;
+  m_Height = height;
+
+  m_HFoV = hfov;
+}
+
+Fisheye::Fisheye(const Camera& other, float hfov)
+{
+  m_Eye = other.GetEye();
+  m_At = other.GetAt();
+  m_Up = other.GetUp();
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+  m_Right = glm::normalize(glm::cross(m_Dir, m_Up));
+  m_CUp = glm::normalize(glm::cross(m_Right, m_Dir));
+
+  Resolution res = other.GetResolution();
+
+  m_Width = static_cast<int>(res.Width);
+  m_Height = static_cast<int>(res.Height);
+
+  m_HFoV = hfov;
+}
+
+Ray Fisheye::GenerateRay(int x, int y, glm::vec2 jitter) const
+{
+  float u =
+      (2.0f * ((x + jitter.x) / static_cast<float>(m_Width))) - 1.0f;
+
+  float v =
+      -((2.0f * ((y + jitter.y) / static_cast<float>(m_Height))) - 1.0f);
+
+  float aspect =
+      static_cast<float>(m_Width) /
+      static_cast<float>(m_Height);
+
+  u *= aspect;
+
+  float r = std::sqrt(u * u + v * v);
+
+  if (r > 1.0f)
+  {
+    return {
+        m_Eye,
+        m_Dir};
+  }
+
+  float phi = std::atan2(v, u);
+
+  float theta = r * (m_HFoV * 0.5f);
+
+  float sinTheta = std::sin(theta);
+  float cosTheta = std::cos(theta);
+
+  Vector localDir(
+      sinTheta * std::cos(phi),
+      sinTheta * std::sin(phi),
+      cosTheta);
+
+  Vector worldDir =
+      localDir.x * m_Right +
+      localDir.y * m_CUp +
+      localDir.z * m_Dir;
+
+  worldDir = glm::normalize(worldDir);
+
+  return {m_Eye, worldDir};
+}
+
 } // namespace VI

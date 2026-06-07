@@ -107,8 +107,8 @@ int main(int argc, char** argv)
   // Veach Camera
   // Camera for the Veach demo scene: centered composition with the plate stack
   // directly under the square lights and a less dominant floor presence.
-  constexpr Point Eye = {0, 1.8f, -5};
-  constexpr Point At = {0, 1.5f, 1.5f};
+  constexpr Point Eye = {0, 1.f, 0};  // orig: 0, 1.8, -5
+  constexpr Point At = {0, 1.f, 1.f}; // orig: 0, 1.5, 1.5
   constexpr Vector Up = {0, 1, 0};
   constexpr float fovH = 45.f;
 
@@ -129,9 +129,10 @@ int main(int argc, char** argv)
     camera.print_info();
 
     // const Orthographic& ortho = Orthographic(render_camera, 8.0f, 4.5f);
-    const DOF& dof = DOF(camera, 0.1f, 5.6f);
+    // const DOF& dof = DOF(camera, 0.1f, 5.6f);
+    const Fisheye& fisheye = Fisheye(camera);
 
-    image = renderer.Render(scene, dof, path_tracing_shader, options.SamplesPerPixel, true);
+    image = renderer.Render(scene, fisheye, path_tracing_shader, options.SamplesPerPixel, true);
   }
   else
   {
