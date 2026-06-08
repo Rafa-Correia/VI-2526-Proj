@@ -139,4 +139,23 @@ private:
   float m_HFoV;
 };
 
+class Panorama final : public ICamera
+{
+public:
+  Panorama(Point eye, Point at, Vector up, int width, int height, float hfovu = glm::pi<float>(), float hfovv = 45.f * 3.14159f / 180.f);
+  Panorama(const Camera& other, float hfovu = glm::pi<float>(), float hfovv = 45.f * 3.14159f / 180.f);
+
+  Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const override;
+
+  inline Resolution GetResolution() const noexcept override
+  {
+    return {static_cast<float>(m_Width), static_cast<float>(m_Height)};
+  }
+
+private:
+  Vector m_Dir, m_Right, m_CUp;
+
+  float m_HFoVU, m_HFoVV;
+};
+
 } // namespace VI

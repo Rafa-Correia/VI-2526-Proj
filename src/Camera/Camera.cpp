@@ -242,26 +242,18 @@ Fisheye::Fisheye(const Camera& other, float hfov)
 
 Ray Fisheye::GenerateRay(int x, int y, glm::vec2 jitter) const
 {
-  float u =
-      (2.0f * ((x + jitter.x) / static_cast<float>(m_Width))) - 1.0f;
+  float u = (2.0f * ((x + jitter.x) / static_cast<float>(m_Width))) - 1.0f;
 
-  float v =
-      -((2.0f * ((y + jitter.y) / static_cast<float>(m_Height))) - 1.0f);
+  float v = -((2.0f * ((y + jitter.y) / static_cast<float>(m_Height))) - 1.0f);
 
-  float aspect =
-      static_cast<float>(m_Width) /
-      static_cast<float>(m_Height);
+  float aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
 
   u *= aspect;
 
   float r = std::sqrt(u * u + v * v);
 
   if (r > 1.0f)
-  {
-    return {
-        m_Eye,
-        m_Dir};
-  }
+    return {m_Eye, m_Dir};
 
   float phi = std::atan2(v, u);
 
@@ -270,19 +262,75 @@ Ray Fisheye::GenerateRay(int x, int y, glm::vec2 jitter) const
   float sinTheta = std::sin(theta);
   float cosTheta = std::cos(theta);
 
-  Vector localDir(
-      sinTheta * std::cos(phi),
-      sinTheta * std::sin(phi),
-      cosTheta);
+  Vector localDir(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
 
-  Vector worldDir =
-      localDir.x * m_Right +
-      localDir.y * m_CUp +
-      localDir.z * m_Dir;
+  Vector worldDir = localDir.x * m_Right + localDir.y * m_CUp + localDir.z * m_Dir;
 
   worldDir = glm::normalize(worldDir);
 
   return {m_Eye, worldDir};
+}
+
+// Panorama
+
+Panorama::Panorama(Point eye, Point at, Vector up, int width, int height, float hfovu, float hfovv)
+{
+  m_Eye = eye;
+  m_At = at;
+  m_Up = up;
+
+  m_Width = width;
+  m_Height = height;
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+  m_Right = glm::normalize(glm::cross(m_Dir, m_Up));
+  m_CUp = glm::normalize(glm::cross(m_Right, m_Dir));
+
+  m_HFoVU = hfovu;
+  m_HFoVV = hfovv;
+}
+
+Panorama::Panorama(const Camera& other, float hfovu, float hfovv)
+{
+  m_Eye = other.GetEye();
+  m_At = other.GetAt();
+  m_Up = other.GetUp();
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+  m_Right = glm::normalize(glm::cross(m_Dir, m_Up));
+  m_CUp = glm::normalize(glm::cross(m_Right, m_Dir));
+
+  Resolution res = other.GetResolution();
+
+  m_Width = static_cast<int>(res.Width);
+  m_Height = static_cast<int>(res.Height);
+
+  m_HFoVU = hfovu;
+  m_HFoVV = hfovv;
+}
+
+Ray Panorama::GenerateRay(int x, int y, glm::vec2 jitter) const
+{
+  float u = (x + jitter.x) / m_Width;
+  float v = (y + jitter.y) / m_Height;
+
+  u = 2.0f * u - 1.0f;
+  v = 1.0f - 2.0f * v;
+
+  float theta = u * m_HFoVU; // yaw (left-right)
+  float phi = v * m_HFoVV;   // pitch (up-down)
+
+  float cosPhi = std::cos(phi);
+
+  Vector dir_cam;
+  dir_cam.x = std::sin(theta) * cosPhi;
+  dir_cam.y = std::sin(phi);
+  dir_cam.z = std::cos(theta) * cosPhi;
+
+  Vector world_dir = dir_cam.x * m_Right + dir_cam.y * m_CUp + dir_cam.z * m_Dir;
+  world_dir = glm::normalize(world_dir);
+
+  return {m_Eye, world_dir};
 }
 
 } // namespace VI
