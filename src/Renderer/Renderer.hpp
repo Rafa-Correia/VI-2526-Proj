@@ -7,8 +7,8 @@
 #include "Utils/ProgressBar.hpp"
 
 #include <atomic>
-#include <future>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 namespace VI
@@ -22,7 +22,7 @@ public:
   template <Shader S>
   Image Render(const Scene& scene, const Camera& camera, const S& shader, int samples_per_pixel = 1, bool do_jittering = false)
   {
-    std::cout << "Call to Renderer::Render(...)" << std::endl;
+    // std::cout << "Call to Renderer::Render(...)" << std::endl;
 
     auto [width, height] = camera.GetResolution();
 
@@ -33,10 +33,10 @@ public:
 
     // float spp_factor = 1.0f / samples_per_pixel;
 
-    // int thread_cnt = std::thread::hardware_concurrency();
-    int thread_cnt = 8;
+    int thread_cnt = std::thread::hardware_concurrency();
+    // int thread_cnt = 1;
 
-    std::cout << "Up to " << thread_cnt << " concurrent threads supported." << std::endl;
+    std::cout << "Using " << thread_cnt << " threads." << std::endl;
 
     std::vector<std::thread> threads(thread_cnt);
 
@@ -45,7 +45,7 @@ public:
     for (int i = 0; i < thread_cnt; i++)
     {
       threads[i] = std::thread(
-          [&, i]()
+          [&]()
           {
             thread_callable(
                 next_row,

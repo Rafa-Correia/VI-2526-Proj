@@ -84,7 +84,7 @@ CommandLineOptions ParseCommandLine(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-  std::cout << "Main called" << std::endl;
+  // std::cout << "Main called" << std::endl;
 
   auto begin = std::chrono::system_clock::now();
   const auto options = ParseCommandLine(argc, argv);
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
 
   if (options.ScenePath.has_value())
   {
-    std::cout << "if block TRUE branch" << std::endl;
+    // std::cout << "if block TRUE branch" << std::endl;
     PathTracingShader path_tracing_shader{{0.0f, 0.0f, 0.0f}, DirectIlluminationMode::Importance};
     Scene scene = CreateGltfScene(*options.ScenePath, w, h);
     scene.Build();
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    std::cout << "if block FALSE branch" << std::endl;
+    // std::cout << "if block FALSE branch" << std::endl;
     VeachShader veach_shader{{0.0f, 0.0f, 0.0f}};
     Scene scene = CreateVeachScene();
     scene.Build();
