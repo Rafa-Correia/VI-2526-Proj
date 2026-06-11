@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Math/Vector.hpp"
+#include <limits>
 
 namespace VI
 {
 
 struct Intersection
 {
-  Vector Position;
-  Vector Normal;
+  Point Position{0.f};
+  Vector Normal{0.f};
   Vec2 TexCoord{0.f};
-  float Distance{-1};
+  float Distance{std::numeric_limits<float>::max()};
   int ObjectIndex{-1};
   int PrimitiveIndex{-1};
 };

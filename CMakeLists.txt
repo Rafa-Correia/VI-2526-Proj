@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(VI-RT)
 
@@ -58,6 +59,9 @@ add_executable(VI-RT src/main.cpp
 
   src/Primitive/AccelerationStructures/GridAccelerationStructure.hpp
   src/Primitive/AccelerationStructures/GridAccelerationStructure.cpp
+
+  src/Primitive/AccelerationStructures/BoundingVolumeHierarchy.hpp
+  src/Primitive/AccelerationStructures/BoundingVolumeHierarchy.cpp
 
   # Lights
   src/Light/Light.hpp

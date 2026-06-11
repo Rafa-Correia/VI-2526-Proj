@@ -47,7 +47,8 @@ struct BoundingBox
     tmin = 0.0f;
     tmax = std::numeric_limits<float>::infinity();
 
-    const auto intersect_axis = [&](float origin, float direction, float min, float max) {
+    const auto intersect_axis = [&](float origin, float direction, float min, float max)
+    {
       if (std::abs(direction) <= MachineEpsilon)
       {
         return origin >= min && origin <= max;
@@ -79,6 +80,11 @@ struct BoundingBox
     Max.x = glm::max(Max.x, other.Max.x);
     Max.y = glm::max(Max.y, other.Max.y);
     Max.z = glm::max(Max.z, other.Max.z);
+  }
+
+  constexpr Point Center() const
+  {
+    return (Min + Max) / 2.f;
   }
 };
 } // namespace VI

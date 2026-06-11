@@ -9,6 +9,7 @@
 #include "Camera/Camera.hpp"
 #include "Light/Light.hpp"
 #include "Math/DiscreteDistribution.hpp"
+#include "Primitive/AccelerationStructures/BoundingVolumeHierarchy.hpp"
 #include "Primitive/AccelerationStructures/GridAccelerationStructure.hpp"
 #include "Primitive/BoundingBox.hpp"
 #include "Primitive/Geometry/Geometry.hpp"
@@ -59,6 +60,7 @@ private:
   std::vector<std::unique_ptr<Light>> m_Lights{};
   std::optional<Camera> m_Camera{std::nullopt};
   LightSamplingDistribution m_LightSamplingDistribution{};
-  GridAccelerationStructure m_AccelerationStructure{};
+  // GridAccelerationStructure m_AccelerationStructure{};
+  BVH m_AccelerationStructure{};
 };
 } // namespace VI

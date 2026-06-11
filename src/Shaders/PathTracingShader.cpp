@@ -17,6 +17,7 @@
 #include <glm/geometric.hpp>
 
 #include <algorithm>
+#include <iostream>
 
 // Balance heuristic (beta=1) for two strategies with one sample each
 float BalanceHeuristic(float pdf_a, float pdf_b)
@@ -30,8 +31,8 @@ float BalanceHeuristic(float pdf_a, float pdf_b)
 // Power heuristic (beta=2) for two strategies with one sample each
 float PowerHeuristic(float pdf_a, float pdf_b)
 {
-    const float pa2 = pdf_a * pdf_a;
-    const float pb2 = pdf_b * pdf_b;
+  const float pa2 = pdf_a * pdf_a;
+  const float pb2 = pdf_b * pdf_b;
   const float denom = pa2 + pb2;
   if (denom <= 0.f)
     return 0.f;
@@ -56,6 +57,15 @@ RGB PathTracingShader::Execute(const Ray& ray, const Scene& scene) const
   {
     return m_BackgroundColor;
   }
+
+  // std::cout << "Intersected (shader::execute)" << std::endl;
+
+  // std::cout << "Intersection info:\n"
+  //           << "Obj. Index: " << intersection.ObjectIndex << "\n"
+  //           << "Prim. Index: " << intersection.PrimitiveIndex << "\n"
+  //           << "Distance: " << intersection.Distance << "\n"
+  //           << "Pos.: " << intersection.Position.x << " " << intersection.Position.y << " " << intersection.Position.z << "\n"
+  //           << "Normal: " << intersection.Normal.x << " " << intersection.Normal.y << " " << intersection.Normal.z << std::endl;
 
   return DoExecute(ray, scene, intersection);
 }
@@ -112,13 +122,14 @@ RGB PathTracingShader::IndirectIllumination(const Ray& ray, const Scene& scene, 
 
   // stochastically select whether to sample the direction according to specular (microfacet) or diffuse (lambertian)
   const bool sample_microfacet = Random::RandomFloat(0.f, 1.f) < microfacet_probability;
-    
+
   // sample the direction according to the selected BRDF mode
   const Vector wi_local = microfacetBRDF.Sample(
-            wo_local, material,
-            sample_microfacet ? MODE::GGX_MODE : MODE::LAMBERT_MODE,
-            intersection.TexCoord);
-  if (wi_local.z <= 0.f)    return RGB{0.0f};
+      wo_local, material,
+      sample_microfacet ? MODE::GGX_MODE : MODE::LAMBERT_MODE,
+      intersection.TexCoord);
+  if (wi_local.z <= 0.f)
+    return RGB{0.0f};
 
   // get the BRDF value
   RGB const f = microfacetBRDF.Evaluate(wo_local, wi_local, material, intersection.TexCoord);
@@ -130,17 +141,19 @@ RGB PathTracingShader::IndirectIllumination(const Ray& ray, const Scene& scene, 
   // this is the actual mixture probability with which this direction could
   // have been sampled by either BRDF branch.
   const float pdf = microfacet_probability * microfacet_pdf + diffuse_probability * diffuse_pdf;
-  if (pdf <= 0.f)    return RGB{0.0f};
-     
+  if (pdf <= 0.f)
+    return RGB{0.0f};
+
   const float cos_theta = wi_local.z;
   const RGB throughput = f * cos_theta / pdf;
-    
+
   // Russian Roulette
   float continuation_probability = 1.0f;
   if (depth >= RUSSIAN_ROULETTE_DEPTH)
   {
     continuation_probability = glm::clamp(std::max(throughput.x, std::max(throughput.y, throughput.z)), 0.05f, 0.95f);
-    if (Random::RandomFloat(0.f, 1.f) >= continuation_probability)      return RGB{0.0f};
+    if (Random::RandomFloat(0.f, 1.f) >= continuation_probability)
+      return RGB{0.0f};
   }
 
   // follow up ray

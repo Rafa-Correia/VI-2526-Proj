@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <span>
 #include <utility>
@@ -124,13 +125,14 @@ LightSamplingDistribution BuildLightSamplingDistribution(const Scene& scene)
 
 void Scene::Build()
 {
-  m_AccelerationStructure = GridAccelerationStructure::Create(*this);
+  // m_AccelerationStructure = GridAccelerationStructure::Create(*this);
+  m_AccelerationStructure = BVH::Create(*this);
   m_LightSamplingDistribution = BuildLightSamplingDistribution(*this);
 }
 
 bool Scene::Trace(const Ray& ray, Intersection& intersection) const
 {
-  intersection.Distance = -1;
+  intersection.Distance = std::numeric_limits<float>::max();
   return m_AccelerationStructure.Trace(ray, *this, intersection);
 }
 

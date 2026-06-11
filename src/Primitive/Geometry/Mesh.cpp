@@ -14,7 +14,7 @@ bool Mesh::Intersect(const Ray& r, Intersection& intersection) const
     return false;
   }
 
-  intersection.Distance = -1;
+  // intersection.Distance = -1;
 
   for (size_t i = 0; i < m_Triangles.size(); i++)
   {
