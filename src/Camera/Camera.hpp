@@ -6,6 +6,7 @@
 
 #include <glm/ext/vector_float2.hpp>
 #include <iostream>
+// #include <limits>
 
 namespace VI
 {
@@ -156,6 +157,31 @@ private:
   Vector m_Dir, m_Right, m_CUp;
 
   float m_HFoVU, m_HFoVV;
+};
+
+class Lens final : public ICamera
+{
+public:
+  Lens(Point eye, Point at, Vector up, int width, int height, float hfov, float lens_radius, float focal_distance);
+  Lens(const Camera& other, float lens_radius, float focal_distance);
+
+  Ray GenerateRay(int x, int y, glm::vec2 jitter = {0.5f, 0.5f}) const override;
+
+  inline Resolution GetResolution() const noexcept override
+  {
+    return {static_cast<float>(m_Width), static_cast<float>(m_Height)};
+  }
+
+  inline Vector GetDir() const
+  {
+    return m_Dir;
+  }
+
+private:
+  Vector m_Dir, m_Right, m_CUp;
+  float m_HFoV, m_LensRadius, m_FocalDist;
+
+  float m_HalfWidth, m_HalfHeight;
 };
 
 } // namespace VI

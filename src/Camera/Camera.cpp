@@ -8,6 +8,7 @@
 #include <glm/geometric.hpp>
 
 #include <cmath>
+#include <random>
 
 namespace VI
 {
@@ -331,6 +332,75 @@ Ray Panorama::GenerateRay(int x, int y, glm::vec2 jitter) const
   world_dir = glm::normalize(world_dir);
 
   return {m_Eye, world_dir};
+}
+
+// thin lens camera
+
+Lens::Lens(Point eye, Point at, Vector up, int width, int height, float hfov, float lens_radius, float focal_distance)
+{
+  m_Eye = eye;
+  m_At = at;
+  m_Up = up;
+
+  m_Width = width;
+  m_Height = height;
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+  m_Right = glm::normalize(glm::cross(m_Dir, m_Up));
+  m_CUp = glm::normalize(glm::cross(m_Right, m_Dir));
+
+  m_HFoV = hfov;
+
+  m_HalfWidth = tan(m_HFoV * 0.5f);
+
+  float aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
+
+  m_HalfHeight = m_HalfWidth / aspect;
+
+  m_LensRadius = lens_radius;
+  m_FocalDist = focal_distance;
+}
+
+Lens::Lens(const Camera& other, float lens_radius, float focal_distance)
+{
+  m_Eye = other.GetEye();
+  m_At = other.GetAt();
+  m_Up = other.GetUp();
+
+  Resolution res = other.GetResolution();
+
+  m_Width = static_cast<int>(res.Width);
+  m_Height = static_cast<int>(res.Height);
+
+  m_Dir = glm::normalize(m_At - m_Eye);
+  m_Right = glm::normalize(glm::cross(m_Dir, m_Up));
+  m_CUp = glm::normalize(glm::cross(m_Right, m_Dir));
+
+  m_HFoV = other.GetFOV();
+
+  m_HalfWidth = tan(m_HFoV * 0.5f);
+
+  float aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
+
+  m_HalfHeight = m_HalfWidth / aspect;
+
+  m_LensRadius = lens_radius;
+  m_FocalDist = focal_distance;
+}
+
+Ray Lens::GenerateRay(int x, int y, glm::vec2 jitter) const
+{
+  float u = ((x + jitter.x) / static_cast<float>(m_Width)) * 2.f - 1.f;
+  float v = -(((y + jitter.y) / static_cast<float>(m_Height)) * 2.f - 1.f);
+
+  Vector dir = glm::normalize(m_Dir + u * m_HalfWidth * m_Right + v * m_HalfHeight * m_CUp);
+  Point focus_point = m_Eye + dir * (m_FocalDist / glm::dot(dir, m_Dir));
+
+  glm::vec2 sample = Random::RandomInUnitDisk();
+
+  Point origin = m_Eye + sample.x * m_LensRadius * m_Right + sample.y * m_LensRadius * m_CUp;
+
+  return {origin, glm::normalize(focus_point - origin)};
 }
 
 } // namespace VI
